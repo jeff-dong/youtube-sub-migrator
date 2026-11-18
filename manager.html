@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YouTube 订阅迁移控制台</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f1f5f9; color: #0f172a; line-height: 1.5; padding-bottom: 48px; }
+    .topbar { background: #0f172a; color: #f8fafc; padding: 20px 32px; }
+    .brand { max-width: 1080px; margin: 0 auto; display: flex; align-items: center; gap: 14px; }
+    .brand-badge { width: 40px; height: 40px; border-radius: 10px; background: #ef4444; color: #fff; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; }
+    .brand h1 { font-size: 20px; }
+    .brand p { font-size: 13px; color: #94a3b8; }
+    .container { max-width: 1080px; margin: 24px auto; padding: 0 20px; display: flex; flex-direction: column; gap: 24px; }
+    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 24px; }
+    .card-header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .step-pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: #fee2e2; color: #b91c1c; }
+    .step-pill-blue { background: #dbeafe; color: #1d4ed8; }
+    .hint { font-size: 13px; color: #475569; margin-bottom: 14px; }
+    .safety-note { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; border-radius: 8px; padding: 10px 14px; font-size: 12.5px; margin-bottom: 14px; }
+    .banner { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 14px; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
+    .banner.error { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
+    .banner.success { background: #f0fdf4; border-color: #bbf7d0; color: #15803d; }
+    .hidden { display: none !important; }
+    .actions-row, .import-loader-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .import-loader-row { margin-bottom: 14px; gap: 12px; }
+    .delay-control { display: flex; align-items: center; gap: 6px; font-size: 13px; margin-left: auto; }
+    .btn, .file-btn { display: inline-flex; align-items: center; justify-content: center; padding: 8px 14px; font-size: 13px; font-weight: 600; border-radius: 8px; border: 1px solid transparent; cursor: pointer; }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-primary, .file-btn { background: #ef4444; color: #fff; }
+    .btn-outline { background: #fff; border-color: #cbd5e1; color: #1e293b; }
+    .btn-danger { background: #fee2e2; color: #b91c1c; border-color: #fecaca; }
+    .btn-sm { padding: 5px 10px; font-size: 12px; background: #f1f5f9; border: 1px solid #cbd5e1; }
+    .input { padding: 7px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; min-width: 220px; }
+    .input-small { min-width: 76px; width: 76px; }
+    .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 14px 0 10px; }
+    .count-label { font-size: 13px; font-weight: 600; color: #475569; }
+    .table-scroll { max-height: 350px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 10px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead th { position: sticky; top: 0; background: #f8fafc; color: #475569; text-align: left; padding: 10px 12px; border-bottom: 1px solid #e2e8f0; }
+    tbody td { padding: 9px 12px; border-bottom: 1px solid #f1f5f9; }
+    .avatar-img { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; background: #e2e8f0; }
+    .link { color: #2563eb; text-decoration: none; }
+    .progress-panel { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; margin-bottom: 14px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 12px; }
+    .stat-item { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; }
+    .stat-label { display: block; font-size: 11.5px; color: #64748b; }
+    .stat-item strong { font-size: 18px; }
+    .progress-bar-bg { width: 100%; height: 10px; background: #e2e8f0; border-radius: 999px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; background: #ef4444; transition: width 0.25s ease; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11.5px; font-weight: 600; }
+    .badge-pending { background: #f1f5f9; color: #475569; }
+    .badge-processing { background: #fef3c7; color: #b45309; }
+    .badge-subscribed { background: #dcfce7; color: #15803d; }
+    .badge-already { background: #dbeafe; color: #1d4ed8; }
+    .badge-failed { background: #fee2e2; color: #b91c1c; }
+    .log-panel { margin-top: 14px; border-radius: 8px; background: #0f172a; color: #e2e8f0; padding: 10px 14px; }
+    .log-panel summary { cursor: pointer; font-size: 12.5px; color: #94a3b8; }
+    .log-panel pre { margin-top: 8px; max-height: 180px; overflow-y: auto; font-size: 12px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-badge">YT</span>
+      <div>
+        <h1>YouTube 订阅迁移控制台</h1>
+        <p>一键导出原账号全部订阅频道信息，并批量自动订阅到新账号</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <div class="card-header">
+        <div>
+          <span class="step-pill">第一步</span>
+          <h2>从原 YouTube 账号导出全部订阅</h2>
+        </div>
+        <div class="actions-row">
+          <button id="btnScan" class="btn btn-primary">扫描当前登录账号的全部订阅</button>
+          <button id="btnDownloadJson" class="btn btn-outline" disabled>下载 JSON（完整信息）</button>
+          <button id="btnDownloadCsv" class="btn btn-outline" disabled>下载 CSV（兼容 Google Takeout）</button>
+        </div>
+      </div>
+      <p class="hint">请先在当前浏览器登录<strong>原 YouTube 账号</strong>，点击「扫描当前登录账号的全部订阅」，插件将自动打开订阅页滚动提取所有频道信息。</p>
+      <div id="exportBanner" class="banner hidden"></div>
+      <div id="exportPreviewWrap" class="hidden">
+        <div class="toolbar">
+          <span id="exportCountLabel" class="count-label">共 0 个频道</span>
+          <input id="exportSearchInput" type="search" class="input" placeholder="搜索频道名称或 @handle..." />
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr><th style="width:48px;">头像</th><th>频道名称</th><th>@Handle / ID</th><th>简介</th><th style="width:80px;">链接</th></tr>
+            </thead>
+            <tbody id="exportTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <div>
+          <span class="step-pill step-pill-blue">第二步</span>
+          <h2>导入订阅到新 YouTube 账号</h2>
+        </div>
+      </div>
+      <p class="hint">在 YouTube 右上角<strong>切换或登录新的目标账号</strong>，然后选择第一步导出的 JSON/CSV 文件（也支持 Google Takeout 导出的 <code>subscriptions.csv</code>），或直接载入刚才扫描的缓存列表。</p>
+      <div class="import-loader-row">
+        <label class="file-btn">选择 JSON / CSV 订阅文件<input id="fileInput" type="file" accept=".json,.csv,.txt" hidden /></label>
+        <button id="btnLoadCached" class="btn btn-outline">直接载入第一步刚扫描的列表</button>
+        <div class="delay-control">
+          <label for="delayInput">每频道间隔（秒）：</label>
+          <input id="delayInput" type="number" min="1.5" max="30" step="0.5" value="3.0" class="input input-small" />
+        </div>
+      </div>
+      <div class="safety-note">提示：建议保持 2.5～4 秒间隔，避免触发 YouTube 短时间频繁订阅限制；若部分失败可稍后点击「仅勾选失败项」继续重试。</div>
+
+      <div id="importControlsWrap" class="hidden">
+        <div class="progress-panel">
+          <div class="stats-grid">
+            <div class="stat-item"><span class="stat-label">总计</span><strong id="statTotal">0</strong></div>
+            <div class="stat-item"><span class="stat-label">已处理</span><strong id="statProcessed">0</strong></div>
+            <div class="stat-item"><span class="stat-label">新订阅成功</span><strong id="statSubscribed">0</strong></div>
+            <div class="stat-item"><span class="stat-label">原本已订阅</span><strong id="statAlready">0</strong></div>
+            <div class="stat-item"><span class="stat-label">失败</span><strong id="statFailed">0</strong></div>
+          </div>
+          <div class="progress-bar-bg"><div id="progressBarFill" class="progress-bar-fill" style="width:0%;"></div></div>
+          <div class="actions-row" style="margin-top:12px;">
+            <button id="btnStartImport" class="btn btn-primary">开始批量自动订阅</button>
+            <button id="btnPauseImport" class="btn btn-outline" disabled>暂停</button>
+            <button id="btnResumeImport" class="btn btn-outline" disabled>继续</button>
+            <button id="btnStopImport" class="btn btn-danger" disabled>停止</button>
+            <button id="btnExportFailed" class="btn btn-outline" disabled>导出失败列表</button>
+          </div>
+        </div>
+        <div class="toolbar">
+          <div class="actions-row">
+            <button id="btnSelectAll" class="btn btn-sm">全选</button>
+            <button id="btnSelectNone" class="btn btn-sm">全不选</button>
+            <button id="btnSelectFailed" class="btn btn-sm">仅勾选失败项</button>
+            <span id="importSelectedLabel" class="count-label">已勾选 0 项</span>
+          </div>
+          <input id="importSearchInput" type="search" class="input" placeholder="筛选待导入频道..." />
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr><th style="width:44px;">勾选</th><th>频道名称</th><th>频道地址</th><th style="width:150px;">状态</th></tr>
+            </thead>
+            <tbody id="importTableBody"></tbody>
+          </table>
+        </div>
+        <details class="log-panel" open>
+          <summary>实时执行日志</summary>
+          <pre id="logOutput">等待开始任务...</pre>
+        </details>
+      </div>
+    </section>
+  </main>
+  <script src="manager.js"></script>
+</body>
+</html>
