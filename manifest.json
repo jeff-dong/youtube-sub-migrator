@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "YouTube 订阅迁移助手 (Sub Migrator)",
+  "version": "1.0.0",
+  "description": "一键导出当前 YouTube 账号的全部订阅频道（JSON / Google Takeout CSV），并自动批量导入到另一个 YouTube 账号。",
+  "permissions": [
+    "storage",
+    "tabs",
+    "scripting",
+    "downloads",
+    "alarms"
+  ],
+  "host_permissions": [
+    "https://www.youtube.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "打开 YouTube 订阅迁移控制台"
+  }
+}
